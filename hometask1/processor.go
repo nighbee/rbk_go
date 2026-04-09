@@ -7,9 +7,7 @@ import (
 	"unicode"
 )
 
-// Process coordinates the text transformation passes.
 func Process(input string) string {
-	// Standardize input by removing Potential UTF-8 BOM
 	input = strings.TrimPrefix(input, "\ufeff")
 
 	words := strings.Fields(input)
@@ -17,22 +15,16 @@ func Process(input string) string {
 		return ""
 	}
 
-	// 1. Templates and Commands
 	words = handleCommands(words)
 
-	// 2. Article Adjustments (a -> an)
 	words = handleArticles(words)
 
-	// Join for structural processing
 	refinedText := strings.Join(words, " ")
 
-	// 3. Handle Punctuation (Must stick to words/quotes)
 	refinedText = handlePunctuation(refinedText)
 
-	// 4. Handle Quotes (Tight wrap)
 	refinedText = handleQuotes(refinedText)
 
-	// Final cleanup for any double spaces
 	return strings.Join(strings.Fields(refinedText), " ")
 }
 
@@ -42,7 +34,6 @@ func handleCommands(words []string) []string {
 	for i := 0; i < len(words); i++ {
 		word := words[i]
 
-		// Multi-word commands: (up, N), (low, N), (cap, N)
 		if strings.HasSuffix(word, ",") && strings.HasPrefix(word, "(") {
 			cmdType := word[1 : len(word)-1]
 			if i+1 < len(words) && strings.HasSuffix(words[i+1], ")") {
@@ -62,7 +53,6 @@ func handleCommands(words []string) []string {
 			}
 		}
 
-		// Single-word commands: (hex), (bin), (up), (low), (cap)
 		if strings.HasPrefix(word, "(") && strings.HasSuffix(word, ")") {
 			cmd := word
 			if len(result) > 0 {
@@ -98,7 +88,6 @@ func handleCommands(words []string) []string {
 			}
 		}
 
-		// FIXED: Non-command words MUST be appended here, outside the command checks.
 		result = append(result, word)
 	}
 	return result
@@ -110,7 +99,6 @@ func handleArticles(words []string) []string {
 		lowerWord := strings.ToLower(words[i])
 		if lowerWord == "a" {
 			nextWord := words[i+1]
-			// We handle cases where the next word might be inside a quote e.g. a 'apple'
 			trimNext := strings.TrimLeft(nextWord, "'")
 			if len(trimNext) > 0 && strings.ContainsRune(vowels, rune(trimNext[0])) {
 				if words[i] == "A" {
@@ -125,7 +113,6 @@ func handleArticles(words []string) []string {
 }
 
 func handlePunctuation(text string) string {
-	// Standard punctuation marks
 	reClose := regexp.MustCompile(`\s+([.,!?:;]+)`)
 	text = reClose.ReplaceAllString(text, "$1")
 
@@ -146,12 +133,10 @@ func handleQuotes(text string) string {
 		} else {
 			if isOpening {
 				result.WriteString(" '")
-				// FIXED: TrimSpace to remove potential internal spaces on both sides
 				result.WriteString(strings.TrimSpace(part))
 				isOpening = false
 			} else {
 				result.WriteString("'")
-				// Add trailing space if it's not the end and contains following text
 				remaining := strings.TrimLeft(part, " ")
 				if remaining != "" {
 					result.WriteString(" ")
