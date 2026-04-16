@@ -31,6 +31,10 @@ func main() {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/weather", weatherHandler.GetWeather)
+
+		r.Get("/weather/{city}", weatherHandler.GetWeatherByCity)
+		r.Get("/weather/country/{country}", weatherHandler.GetCountryWeather)
+		r.Get("/weather/country/{country}/top", weatherHandler.GetTopCities)
 	})
 
 	addr := ":8080"
